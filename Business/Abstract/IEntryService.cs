@@ -11,8 +11,8 @@ namespace Business.Abstract
     {
         List<Entry> GetAll();
         List<Entry> GetEntriesForDate(DateTime date);
-        List<Entry> GetEntriesForDateAndPerson(DateTime date, int sicil);
-        List<Entry> GetPerson(int sicil);
-        int CalcutaleWorkingHours();
+        List<Entry> GetEntriesForDateAndPerson(DateTime date, string sicil);
+        List<Entry> GetPerson(string sicil);
+        TimeSpan CalculateWorkingHours(DateTime date, string sicil);
     }
 }

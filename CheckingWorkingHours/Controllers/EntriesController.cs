@@ -38,7 +38,7 @@ namespace CheckingWorkingHours.Controllers
         }
 
         [HttpGet("getentriesfordateandsicil")]
-        public List<Entry> GetEntriesForDateAndSicil(DateTime date, int sicil)
+        public List<Entry> GetEntriesForDateAndSicil(DateTime date, string sicil)
         {
             IEntryService entryService = new EntryManager(new EfEntryDal());
             var result = entryService.GetEntriesForDateAndPerson(date, sicil);
@@ -46,8 +46,17 @@ namespace CheckingWorkingHours.Controllers
 
         }
 
+        [HttpGet("calculateworkinghours")]
+        public TimeSpan CalculateWorkingHours(DateTime date, string sicil)
+        {
+            IEntryService entryService = new EntryManager(new EfEntryDal());
+            var result = entryService.CalculateWorkingHours(date, sicil);
+            return result;
+
+        }
+
         [HttpGet("getperson")]
-        public List<Entry> Get(int sicil)
+        public List<Entry> Get(string sicil)
         {
             IEntryService entryService = new EntryManager(new EfEntryDal());
             var result = entryService.GetPerson(sicil);

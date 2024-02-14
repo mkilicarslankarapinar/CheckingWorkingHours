@@ -10,10 +10,10 @@ namespace Entities
     public class Entry: IEntity
     {
         [Key]
-        public int Sicil { get; set; }
+        public string? Sicil { get; set; }
         public DateTime Tarih { get; set; }
         public string? Yon { get; set; }
         public string? Tanim { get; set; }
-        public int TerminalID { get; set; }
+        public string? TerminalID { get; set; }
     }
 }
