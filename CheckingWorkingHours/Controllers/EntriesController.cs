@@ -28,11 +28,20 @@ namespace CheckingWorkingHours.Controllers
 
         }
 
-        [HttpGet("getdate")]
+        [HttpGet("getentriesfordate")]
         public List<Entry> Get(DateTime date)
         {
             IEntryService entryService = new EntryManager(new EfEntryDal());
-            var result = entryService.GetDate(date);
+            var result = entryService.GetEntriesForDate(date);
+            return result;
+
+        }
+
+        [HttpGet("getentriesfordateandsicil")]
+        public List<Entry> GetEntriesForDateAndSicil(DateTime date, int sicil)
+        {
+            IEntryService entryService = new EntryManager(new EfEntryDal());
+            var result = entryService.GetEntriesForDateAndPerson(date, sicil);
             return result;
 
         }

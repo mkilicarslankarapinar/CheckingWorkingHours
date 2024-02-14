@@ -21,14 +21,31 @@ namespace Business.Concrete
             _entryDal = entryDal;
         }
 
+        public int CalcutaleWorkingHours()
+        {
+            throw new NotImplementedException();
+        }
+
         public List<Entry> GetAll()
         {
             return _entryDal.GetAll();
         }
 
-        public List<Entry> GetDate(DateTime date)
+        public List<Entry> GetEntriesForDate(DateTime date)
         {
-            return new List<Entry>(_entryDal.GetAll(d => d.Tarih == date));
+            DateTime startDate = new DateTime(date.Year, date.Month, date.Day, 0, 0, 0);
+            DateTime endDate = new DateTime(date.Year, date.Month, date.Day, 23, 59, 59);
+            return new List<Entry>(_entryDal.GetAll(d => d.Tarih >= startDate && d.Tarih <= endDate));
+        }
+
+        public List<Entry> GetEntriesForDateAndPerson(DateTime date, int sicil)
+        {
+            DateTime startDate = new DateTime(date.Year, date.Month, date.Day, 0, 0, 0); // Tarihin başlangıcı (00:00:00)
+            DateTime endDate = new DateTime(date.Year, date.Month, date.Day, 23, 59, 59); // Tarihin sonu (23:59:59)
+
+
+            // Belirtilen tarih aralığı ve sicil numarasına göre giriş çıkış verilerini filtreleyin
+            return new List<Entry>(_entryDal.GetAll(d => d.Tarih >= startDate && d.Tarih <= endDate && d.Sicil == sicil));
         }
 
         public List<Entry> GetPerson(int sicil)

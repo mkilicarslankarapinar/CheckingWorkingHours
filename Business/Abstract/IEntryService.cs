@@ -10,7 +10,9 @@ namespace Business.Abstract
     public interface IEntryService
     {
         List<Entry> GetAll();
-        List<Entry> GetDate(DateTime date);
+        List<Entry> GetEntriesForDate(DateTime date);
+        List<Entry> GetEntriesForDateAndPerson(DateTime date, int sicil);
         List<Entry> GetPerson(int sicil);
+        int CalcutaleWorkingHours();
     }
 }
