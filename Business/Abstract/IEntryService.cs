@@ -14,5 +14,6 @@ namespace Business.Abstract
         List<Entry> GetEntriesForDateAndPerson(DateTime date, string sicil);
         List<Entry> GetPerson(string sicil);
         TimeSpan CalculateWorkingHours(DateTime date, string sicil);
+
     }
 }

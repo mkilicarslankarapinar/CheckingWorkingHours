@@ -1,14 +1,7 @@
 ﻿using Business.Abstract;
 using DataAccess.Abstract;
-using DataAccess.Concrete;
 using Entities;
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace Business.Concrete
 {
@@ -22,6 +15,8 @@ namespace Business.Concrete
         }
 
 
+
+
         public TimeSpan CalculateWorkingHours(DateTime date, string sicil)
         {
             DateTime startDate = new DateTime(date.Year, date.Month, date.Day, 0, 0, 0); // Tarihin başlangıcı (00:00:00)
@@ -29,42 +24,88 @@ namespace Business.Concrete
 
             List<Entry> entries = _entryDal.GetAll(d => d.Tarih >= startDate && d.Tarih <= endDate && d.Sicil == sicil);
 
-            List<DateTime> entryTimes = new List<DateTime>();
-            List<DateTime> exitTimes = new List<DateTime>();
+            // Giriş ve çıkışları zamana göre sırala
+            entries = entries.OrderBy(e => e.Tarih).ToList();
 
-            foreach (var entry in entries)
+            // Eğer ilk kayıt çıkışsa veya son kayıt girişse bu kayıtları listeden çıkar
+            while (entries.Count > 0 && entries[0].Yon == "0")
             {
-                int yonValue;
-                if (Int32.TryParse(entry.Yon, out yonValue)) // Yon değerini integer'a dönüştür
+                entries.RemoveAt(0); // İlk kaydı çıkar
+            }
+
+            while (entries.Count > 0 && entries[entries.Count - 1].Yon == "1")
+            {
+                entries.RemoveAt(entries.Count - 1); // Son kaydı çıkar
+            }
+
+            List<TimeSpan> workPeriods = new List<TimeSpan>();
+
+            DateTime? entry = null;
+            DateTime? exit = null;
+            bool skipNext = false;
+
+            for (int i = 0; i < entries.Count; i++)
+            {
+                var currentEntity = entries[i];
+                var nextEntity = entries.Count == i+1 ? null : entries[i + 1];
+
+                if (currentEntity.Yon == nextEntity?.Yon)
                 {
-                    if (yonValue == 1) // Giriş
+                    if (currentEntity.Yon == "1" && !skipNext)
                     {
-                        entryTimes.Add(entry.Tarih);
+                        entry = currentEntity?.Tarih;
+                        skipNext = true;
                     }
-                    else if (yonValue == 0) // Çıkış
+
+                    continue;
+                }
+                else if (skipNext)
+                {
+                    if (entry == null)
                     {
-                        exitTimes.Add(entry.Tarih);
+                        entry = currentEntity?.Tarih;
                     }
+
+                    skipNext = false;
+                    continue;
                 }
                 else
                 {
-                    // Yon değeri uygun bir şekilde dönüştürülemedi, uygun bir hata işleme mekanizması geliştirmelisiniz
+                    if (currentEntity.Yon == "1" && entry == null)
+                    {
+                        entry = currentEntity?.Tarih;
+                    }
+
+                    if (currentEntity.Yon == "0" && exit == null)
+                    {
+                        exit = currentEntity?.Tarih;
+                    }
+
+                    skipNext = false;
+                }
+
+                if (entry != null && exit != null && !skipNext)
+                {
+                    workPeriods.Add(exit.Value - entry.Value);
+                    entry = null;
+                    exit = null;
+                    skipNext = false;
                 }
             }
 
-            if (entryTimes.Count == 0 || exitTimes.Count == 0)
+            // Tüm çalışma sürelerini topla
+            TimeSpan totalWorkingHours = TimeSpan.Zero;
+            foreach (var period in workPeriods)
             {
-                // Giriş veya çıkış bulunamadı, uygun bir hata işleme mekanizması geliştirmelisiniz
-                return TimeSpan.Zero;
+                totalWorkingHours += period;
             }
 
-            // En erken giriş ve en son çıkışı bulun
-            DateTime firstEntryTime = entryTimes.Min();
-            DateTime lastExitTime = exitTimes.Max();
-
-            TimeSpan totalWorkingHours = lastExitTime - firstEntryTime;
             return totalWorkingHours;
         }
+
+
+
+
 
         public List<Entry> GetAll()
         {
@@ -92,5 +133,6 @@ namespace Business.Concrete
         {
             return new List<Entry>(_entryDal.GetAll(d => d.Sicil == sicil));
         }
+
     }
 }
