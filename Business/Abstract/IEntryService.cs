@@ -13,6 +13,7 @@ namespace Business.Abstract
         List<Entry> GetEntriesForDate(DateTime date);
         List<Entry> GetEntriesForDateAndPerson(DateTime date, string sicil);
         List<Entry> GetPerson(string sicil);
+        Dictionary<string, TimeSpan> CalculateMonthlyWorkingHours(DateTime date);
         TimeSpan CalculateWorkingHours(DateTime date, string sicil);
 
     }

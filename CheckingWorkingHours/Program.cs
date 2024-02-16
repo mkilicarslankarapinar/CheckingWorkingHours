@@ -14,7 +14,6 @@ builder.Services.AddSingleton<IEntryService, EntryManager>();
 builder.Services.AddSingleton<IEntryDal, EfEntryDal>();
 
 
-
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
