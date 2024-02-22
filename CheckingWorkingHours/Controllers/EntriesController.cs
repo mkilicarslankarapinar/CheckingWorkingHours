@@ -6,6 +6,9 @@ using Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security;
+using System;
+using Microsoft.SharePoint.Client;
 
 
 namespace CheckingWorkingHours.Controllers
@@ -49,7 +52,7 @@ namespace CheckingWorkingHours.Controllers
 
         }
 
-        [HttpGet("downloadmonthlyworkinghours")]
+       [HttpGet("downloadmonthlyworkinghours")]
         public IActionResult CalculateWorkingHours(DateTime date)
         {
             // Çalışma saatlerini hesapla
@@ -58,9 +61,16 @@ namespace CheckingWorkingHours.Controllers
             // Excel dosyasına aktar
             byte[] fileContents = ExportToExcel(result);
 
-            // Dosyayı kullanıcıya indir
-            return File(fileContents, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "MonthlyWorkingHours.xlsx");
+            // Dosyayı SharePoint'e yükle
+            string sharePointUrl = "https://tatgida.sharepoint.com/sites/ridvan/PDKS_Document/";
+            string uploadFolderUrl = "https://tatgida.sharepoint.com/sites/ridvan/PDKS_Document/TatWorkingHoursFolder";
+            string fileName = "MonthlyWorkingHours.xlsx";
+            UploadFileToSharePoint(fileContents, sharePointUrl, uploadFolderUrl, fileName);
+
+            // Kullanıcıya indirme işlemi için başarı mesajı dön
+            return Ok("Excel dosyası başarıyla SharePoint'e yüklendi.");
         }
+
         private byte[] ExportToExcel(Dictionary<string, TimeSpan> data)
         {
             using (var workbook = new XLWorkbook())
@@ -90,6 +100,40 @@ namespace CheckingWorkingHours.Controllers
             }
         }
 
+        private void UploadFileToSharePoint(byte[] fileContents, string sharePointUrl, string uploadFolderUrl, string fileName)
+        {
+            using (var ctx = new ClientContext(sharePointUrl))
+            {
+                // SharePoint kimlik doğrulaması
+                ctx.Credentials = new SharePointOnlineCredentials("kilicarslan.karapinar@tat.com.tr", GetSecureString("Kilic2608!"));
 
+                // SharePoint'deki hedef klasör
+                var targetFolder = ctx.Web.GetFolderByServerRelativeUrl(uploadFolderUrl);
+
+                // Dosya oluşturma bilgileri
+                var fileCreationInfo = new FileCreationInformation
+                {
+                    Content = fileContents,
+                    Overwrite = true,
+                    Url = fileName
+                };
+
+                // Dosyayı hedef klasöre yükle
+                var uploadFile = targetFolder.Files.Add(fileCreationInfo);
+                ctx.Load(uploadFile);
+                ctx.ExecuteQuery();
+            }
+        }
+
+        // Şifreyi güvenli bir dizeye dönüştürme
+        private SecureString GetSecureString(string password)
+        {
+            SecureString securePassword = new SecureString();
+            foreach (char c in password)
+            {
+                securePassword.AppendChar(c);
+            }
+            return securePassword;
+        }
     }
 }
